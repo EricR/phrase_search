@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
-  "sync"
 )
 
 type Record struct {
@@ -32,13 +32,13 @@ func (index *Index) Add(phrase string, data string) int {
 	var records_added int
 	var nw string
 	var ns int
-  var wg sync.WaitGroup
+	var wg sync.WaitGroup
 
 	if wc == 0 {
 		return records_added
 	}
 
-  wg.Add(wc)
+	wg.Add(wc)
 
 	start := time.Now()
 	if index.Debug {
@@ -58,12 +58,12 @@ func (index *Index) Add(phrase string, data string) int {
 					}
 				}
 
-        wg.Done()
+				wg.Done()
 			}(bs)
 		}
 	}
 
-  wg.Wait()
+	wg.Wait()
 
 	total := time.Now().Sub(start)
 	if index.Debug {
