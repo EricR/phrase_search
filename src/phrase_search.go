@@ -52,7 +52,7 @@ func (index *Index) Add(entry string, data string) int {
 	}
 
 	// Since we're creating go routines for each iteration of nGram tokenization,
-  // we need a waitgroup to know when we're all done
+	// we need a waitgroup to know when we're all done
 	wg.Add(wc)
 
 	// Track amount of time nGrams tokenization takes
