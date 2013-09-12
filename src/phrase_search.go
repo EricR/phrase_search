@@ -104,15 +104,15 @@ func main() {
 	index.Add("my adorable pet dog", "Spot")
 
 	good_boy := index.Find("pet dog")
-  if good_boy != nil {
-    fmt.Printf("\nwho is a pet dog? %s (score: %d)\n", good_boy[0].Data, good_boy[0].Score)
-  }
+	if good_boy != nil {
+		fmt.Printf("\nwho is a pet dog? %s (score: %d)\n", good_boy[0].Data, good_boy[0].Score)
+	}
 
 	fmt.Printf("\nTelling 'facts' that 'an awesome programming language that i enjoy' = 'Go'\n\n")
 	index.Add("an awesome programming language that i enjoy", "Go")
 
 	programming_language := index.Find("an awesome programming language")
-  if programming_language != nil {
-    fmt.Printf("\nwhat is an awesome programming language? %s (score: %d)\n\n", programming_language[0].Data, programming_language[0].Score)
-  }
+	if programming_language != nil {
+		fmt.Printf("\nwhat is an awesome programming language? %s (score: %d)\n\n", programming_language[0].Data, programming_language[0].Score)
+	}
 }
