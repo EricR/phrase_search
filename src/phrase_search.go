@@ -52,7 +52,7 @@ func (index *Index) Add(entry string, data string) int {
 	}
 
 	// Since we're creating go routines for each iteration of nGrams, we need a waitgroup to
-  // know when we're all done
+	// know when we're all done
 	wg.Add(wc)
 
 	// Track amount of time nGrams takes
