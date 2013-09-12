@@ -27,49 +27,49 @@ func NewIndex(name string, debug bool) *Index {
 }
 
 func (index *Index) Add(entry string, data string) int {
-	var records_added int
+	var rc int
+	var wc int
 	var wg sync.WaitGroup
 	var words []string
-	var word_count int
 
 	// Split phrase into words
 	words = strings.Split(entry, " ")
-	word_count = len(words)
+	wc = len(words)
 
-	// If we don't have any words, don't bother doing anything
-	if word_count == 0 {
-		return records_added
+	// If word count is zero, we have nothing to do
+	if wc == 0 {
+		return rc
 	}
 
-	// Add our words count to a wait group so we know when we're done
-	wg.Add(word_count)
+	// Add our words count to a wait group so we have all nGrams
+	wg.Add(wc)
 
-	// Track amunt of time it takes to process the words
+	// Track amount of time nGram generation takes
 	start := time.Now()
 	if index.Debug {
-		log.Printf("Started writing %d words to '%s'", word_count, index.Name)
+		log.Printf("Started writing %d words to '%s'", wc, index.Name)
 	}
 
-	// Create nGrams for all length cases
-	if word_count > 1 {
-		for bound_size := word_count; bound_size > 0; bound_size-- {
-			go func(bound_size int) {
-				i_max := word_count - (bound_size - 1)
-				for i := 0; i < i_max; i++ {
-					phrase := strings.Join(words[i:i+bound_size], " ")
-					score := word_count - bound_size
-					records_added++
-					index.Records[phrase] = append(index.Records[phrase], &Record{data, score})
-					if index.Debug {
-						log.Printf("%s <-- %s : %s (perm_score=%d)", index.Name, phrase, data, score)
-					}
+	// Create nGrams for all cases of n
+	for n := wc; n > 0; n-- {
+		go func(n int) {
+			i_max := wc - (n - 1)
+			for i := 0; i < i_max; i++ {
+				phrase := strings.Join(words[i:i+n], " ")
+				score := wc - n
+				rc++
+
+				index.Records[phrase] = append(index.Records[phrase], &Record{data, score})
+				if index.Debug {
+					log.Printf("%s <-- %s : %s (perm_score=%d)", index.Name, phrase, data, score)
 				}
+			}
 
-				wg.Done()
-			}(bound_size)
-		}
+			wg.Done()
+		}(n)
 	}
 
+	// Wait until we have all nGrams
 	wg.Wait()
 
 	total := time.Now().Sub(start)
@@ -77,7 +77,7 @@ func (index *Index) Add(entry string, data string) int {
 		log.Printf("Write took %fs", total.Seconds())
 	}
 
-	return records_added
+	return wc
 }
 
 func (index *Index) Find(phrase string) []*Record {
@@ -96,6 +96,6 @@ func main() {
 	fmt.Printf("\nTelling 'facts' that 'an awesome programming language that i enjoy' = 'Go'\n\n")
 	index.Add("an awesome programming language that i enjoy", "Go")
 
-	fav_programming_language := index.Find("an awesome programming language")
-	fmt.Printf("\nwhat is an awesome programming language? %s (score: %d)\n\n", fav_programming_language[0].Data, fav_programming_language[0].Score)
+	programming_language := index.Find("an awesome programming language")
+	fmt.Printf("\nwhat is an awesome programming language? %s (score: %d)\n\n", programming_language[0].Data, programming_language[0].Score)
 }
