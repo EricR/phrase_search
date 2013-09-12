@@ -41,7 +41,7 @@ func (index *Index) Add(entry string, data string) int {
 		return rc
 	}
 
-	// Add our words count to a wait group so we have all nGrams
+	// Create a wait group to keep track of when all nGram creation iterations are finished
 	wg.Add(wc)
 
 	// Track amount of time nGram generation takes
