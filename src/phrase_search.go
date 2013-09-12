@@ -8,16 +8,16 @@ import (
 	"time"
 )
 
-// A record has associated data and a score
-// Scores are the number of permutations that that record required
-// The lower the score, the more "whole" of a match it was
+// A record has associated data and a score.
+// Scores are the number of permutations that were required for that record.
+// The lower the score, the bigger the nGram token was and the more unique the record is.
 //
 type Record struct {
 	Data  string
 	Score int
 }
 
-// An index has a name, associated records, and can show debug output
+// An index has a name, associated records, and can show debug output.
 //
 type Index struct {
 	Name    string
@@ -25,7 +25,7 @@ type Index struct {
 	Debug   bool
 }
 
-// Creates a new index
+// Creates a new index.
 //
 func NewIndex(name string, debug bool) *Index {
 	if debug {
@@ -34,7 +34,7 @@ func NewIndex(name string, debug bool) *Index {
 	return &Index{name, make(map[string][]*Record), debug}
 }
 
-// Generates nGrams for an entry and stores it in the index
+// Generates nGram tokens and stores them in the index.
 //
 func (index *Index) Add(entry string, data string) int {
 	var rc int
@@ -51,17 +51,17 @@ func (index *Index) Add(entry string, data string) int {
 		return rc
 	}
 
-	// Since we're creating go routines for each iteration of nGrams, we need a waitgroup to
-	// know when we're all done
+	// Since we're creating go routines for each iteration of nGram tokenization,
+  // we need a waitgroup to know when we're all done
 	wg.Add(wc)
 
-	// Track amount of time nGrams takes
+	// Track amount of time nGrams tokenization takes
 	start := time.Now()
 	if index.Debug {
 		log.Printf("Started writing %d words to '%s'", wc, index.Name)
 	}
 
-	// Create nGrams for all cases of n
+	// Generates nGram tokens for all cases of n and creates associated records
 	for n := wc; n > 0; n-- {
 		go func(n int) {
 			i_max := wc - (n - 1)
@@ -80,7 +80,7 @@ func (index *Index) Add(entry string, data string) int {
 		}(n)
 	}
 
-	// Wait until we have all nGrams
+	// Wait until we're finished
 	wg.Wait()
 
 	total := time.Now().Sub(start)
@@ -91,7 +91,7 @@ func (index *Index) Add(entry string, data string) int {
 	return wc
 }
 
-// Find looks up the phrase in an index's records
+// Looks up the phrase in an index's records
 //
 func (index *Index) Find(phrase string) []*Record {
 	return index.Records[phrase]

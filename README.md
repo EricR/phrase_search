@@ -1,4 +1,7 @@
-phrase_search
-=============
+# Phrase Search
 
-Playing with string search algorithms in Go
+Playing with search stuff like nGrams tokenizers in Go.
+
+## Todo
+* Don't insert duplicate records into an index
+* Write tests
