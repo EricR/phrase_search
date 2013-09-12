@@ -61,7 +61,7 @@ func (index *Index) Add(entry string, data string) int {
 		log.Printf("Started writing %d words to '%s'", wc, index.Name)
 	}
 
-	// Generates nGram tokens for all cases of n and creates associated records
+	// Generate nGram tokens for all cases of n and create associated records
 	for n := wc; n > 0; n-- {
 		go func(n int) {
 			i_max := wc - (n - 1)
