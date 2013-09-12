@@ -8,17 +8,25 @@ import (
 	"time"
 )
 
+// A record has associated data and a score
+// Scores are the number of permutations that that record required
+// The lower the score, the more "whole" of a match it was
+//
 type Record struct {
 	Data  string
 	Score int
 }
 
+// An index has a name, associated records, and can show debug output
+//
 type Index struct {
 	Name    string
 	Records map[string][]*Record
 	Debug   bool
 }
 
+// Creates a new index
+//
 func NewIndex(name string, debug bool) *Index {
 	if debug {
 		log.Printf("Creating index '%s'", name)
@@ -26,6 +34,8 @@ func NewIndex(name string, debug bool) *Index {
 	return &Index{name, make(map[string][]*Record), debug}
 }
 
+// Generates nGrams for an entry and stores it in the index
+//
 func (index *Index) Add(entry string, data string) int {
 	var rc int
 	var wc int
@@ -36,15 +46,16 @@ func (index *Index) Add(entry string, data string) int {
 	words = strings.Split(entry, " ")
 	wc = len(words)
 
-	// If word count is zero, we have nothing to do
+	// If word count is 0, we have nothing to do
 	if wc == 0 {
 		return rc
 	}
 
-	// Create a wait group to keep track of when all nGram creation iterations are finished
+	// Since we're creating go routines for each iteration of nGrams, we need a waitgroup to
+  // know when we're all done
 	wg.Add(wc)
 
-	// Track amount of time nGram generation takes
+	// Track amount of time nGrams takes
 	start := time.Now()
 	if index.Debug {
 		log.Printf("Started writing %d words to '%s'", wc, index.Name)
@@ -80,6 +91,8 @@ func (index *Index) Add(entry string, data string) int {
 	return wc
 }
 
+// Find looks up the phrase in an index's records
+//
 func (index *Index) Find(phrase string) []*Record {
 	return index.Records[phrase]
 }
