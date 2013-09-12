@@ -26,40 +26,47 @@ func NewIndex(name string, debug bool) *Index {
 	return &Index{name, make(map[string][]*Record), debug}
 }
 
-func (index *Index) Add(phrase string, data string) int {
-	words := strings.Split(phrase, " ")
-	wc := len(words)
+func (index *Index) Add(entry string, data string) int {
 	var records_added int
-	var nw string
-	var ns int
 	var wg sync.WaitGroup
+  var words []string
+  var word_count int
 
-	if wc == 0 {
+  // Split phrase into words
+  words = strings.Split(entry, " ")
+  word_count = len(words)
+
+  // If we don't have any words, don't bother doing anything
+	if word_count == 0 {
 		return records_added
 	}
 
-	wg.Add(wc)
+  // Add our words count to a wait group so we know when we're done
+	wg.Add(word_count)
 
+  // Track amunt of time it takes to process the words
 	start := time.Now()
 	if index.Debug {
-		log.Printf("Started writing %d words to '%s'", wc, index.Name)
+		log.Printf("Started writing %d words to '%s'", word_count, index.Name)
 	}
 
-	if wc > 1 {
-		for bs := wc; bs > 0; bs-- {
-			go func(bs int) {
-				for i := 0; i < wc-(bs-1); i++ {
-					nw = strings.Join(words[i:i+bs], " ")
-					ns = wc - bs
+  // Create nGrams for all length cases
+	if word_count > 1 {
+		for bound_size := word_count; bound_size > 0; bound_size-- {
+			go func(bound_size int) {
+        i_max := word_count-(bound_size-1)
+				for i := 0; i < i_max; i++ {
+          phrase := strings.Join(words[i:i+bound_size], " ")
+          score := word_count - bound_size
 					records_added++
-					index.Records[nw] = append(index.Records[nw], &Record{data, ns})
+					index.Records[phrase] = append(index.Records[phrase], &Record{data, score})
 					if index.Debug {
-						log.Printf("%s <-- %s : %s (perm_score=%d)", index.Name, nw, data, ns)
+						log.Printf("%s <-- %s : %s (perm_score=%d)", index.Name, phrase, data, score)
 					}
 				}
 
 				wg.Done()
-			}(bs)
+			}(bound_size)
 		}
 	}
 
@@ -89,6 +96,6 @@ func main() {
 	fmt.Printf("\nTelling 'facts' that 'an awesome programming language that i enjoy' = 'Go'\n\n")
 	index.Add("an awesome programming language that i enjoy", "Go")
 
-	fav_programming_language := index.Find("awesome programming language")
+	fav_programming_language := index.Find("an awesome programming language")
 	fmt.Printf("\nwhat is an awesome programming language? %s (score: %d)\n\n", fav_programming_language[0].Data, fav_programming_language[0].Score)
 }
