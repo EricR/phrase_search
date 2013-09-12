@@ -29,35 +29,35 @@ func NewIndex(name string, debug bool) *Index {
 func (index *Index) Add(entry string, data string) int {
 	var records_added int
 	var wg sync.WaitGroup
-  var words []string
-  var word_count int
+	var words []string
+	var word_count int
 
-  // Split phrase into words
-  words = strings.Split(entry, " ")
-  word_count = len(words)
+	// Split phrase into words
+	words = strings.Split(entry, " ")
+	word_count = len(words)
 
-  // If we don't have any words, don't bother doing anything
+	// If we don't have any words, don't bother doing anything
 	if word_count == 0 {
 		return records_added
 	}
 
-  // Add our words count to a wait group so we know when we're done
+	// Add our words count to a wait group so we know when we're done
 	wg.Add(word_count)
 
-  // Track amunt of time it takes to process the words
+	// Track amunt of time it takes to process the words
 	start := time.Now()
 	if index.Debug {
 		log.Printf("Started writing %d words to '%s'", word_count, index.Name)
 	}
 
-  // Create nGrams for all length cases
+	// Create nGrams for all length cases
 	if word_count > 1 {
 		for bound_size := word_count; bound_size > 0; bound_size-- {
 			go func(bound_size int) {
-        i_max := word_count-(bound_size-1)
+				i_max := word_count - (bound_size - 1)
 				for i := 0; i < i_max; i++ {
-          phrase := strings.Join(words[i:i+bound_size], " ")
-          score := word_count - bound_size
+					phrase := strings.Join(words[i:i+bound_size], " ")
+					score := word_count - bound_size
 					records_added++
 					index.Records[phrase] = append(index.Records[phrase], &Record{data, score})
 					if index.Debug {
