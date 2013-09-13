@@ -1,6 +1,6 @@
 # Phrase Search
 
-A small text searcher that is optimized to work with bodies of text.
+A small text searcher that is optimized to work with larger bodies of text.
 It:
 
 * Takes a paragraph and breaks it up into sentences using punctuation.
