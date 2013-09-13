@@ -114,10 +114,11 @@ func main() {
 	index.Add("Curabitur sit amet mauris. Morbi in dui quis est pulvinar ullamcorper. Nulla facilisi. Integer lacinia sollicitudin massa. Cras metus. Sed aliquet risus a tortor. Integer id quam. Morbi mi. Quisque nisl felis, venenatis tristique, dignissim in, ultrices sit amet, augue. Proin sodales libero eget ante. Nulla quam. Aenean laoreet. Vestibulum nisi lectus, commodo ac, facilisis ac, ultricies eu, pede. Ut orci risus, accumsan porttitor, cursus quis, aliquet eget, justo. ", "Fourth Loreum Ispum")
 
   fmt.Printf("\nSearching for 'a needle in a Hay Stack' in 'Lorem Ipsums' index")
-  start := time.Now()
+  time_start := time.Now()
   needle := index.Search("a needle in a Hay Stack")
+  time_total := time.Now().Sub(time_start).Seconds()
 
   if needle != nil {
-    fmt.Printf("\nFound %d record(s) in %fs: %s (score: %1.2f)\n\n", len(needle), time.Now().Sub(start).Seconds(), needle[0].Data, needle[0].Score)
+    fmt.Printf("\nFound %d record(s) in %fs: %s (score: %1.2f)\n\n", len(needle), time_total, needle[0].Data, needle[0].Score)
   }
 }
