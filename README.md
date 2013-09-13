@@ -7,8 +7,9 @@ It:
 * Breaks the body of text up into tokens using sentence, lowercase, and
   nGrams tokenizers. These tokens get stored into a Token Map, which
   makes sure duplicate tokens don't get added for the same document.
-* Tokens reference Documents.
-* Stores the tokens into the Index.
+* Scores tokens based on how relavent they are to the Document.
+* Stores the tokens into the Index, which then can be queried for
+  relavent Documents.
 
 ## Example
 
