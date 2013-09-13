@@ -4,6 +4,8 @@ I was experimenting with nGram tokenizers in Go and I ended up with a
 neat little text searcher that is optimized to find phrases in large
 bodies of text.
 
+## Example
+
 ```go
 index := NewIndex("Lorem Ipsums", false)
 
@@ -21,6 +23,20 @@ time_total := time.Now().Sub(time_start).Seconds()
 if needle != nil {
   fmt.Printf("\nFound %d record(s) in %fs: %s (score: %1.2f)\n\n", len(needle), time_total, needle[0].Data, needle[0].Score)
 }
+```
+
+On my iMac it runs pretty fast
+
+```
+Writing lorem ipsums to 'facts'
+
+2013/09/13 14:17:21 Wrote 483 words to 'Lorem Ipsums' (took 0.000425s)
+2013/09/13 14:17:21 Wrote 430 words to 'Lorem Ipsums' (took 0.000309s)
+2013/09/13 14:17:21 Wrote 307 words to 'Lorem Ipsums' (took 0.000188s)
+2013/09/13 14:17:21 Wrote 243 words to 'Lorem Ipsums' (took 0.000141s)
+
+Searching for 'a needle in a Hay Stack' in 'Lorem Ipsums' index
+Found 1 record(s) in 0.000001s: First Lorem Ipsum (score: 0.86)
 ```
 
 ## Todo
