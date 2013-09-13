@@ -43,15 +43,13 @@ func (index *Index) Add(text string, data string) int {
 	// Init records
 	records := make(map[string]*Record)
 
-	// Make text all lowercase
-	text = strings.ToLower(text)
-
 	// Split text into phrases
 	phrases = strings.FieldsFunc(text, SentenceDelims)
 
 	start := time.Now()
 
 	for _, phrase := range phrases {
+    phrase = strings.ToLower(phrase)
 		words := strings.Split(phrase, " ")
 		wc := len(words)
 

@@ -1,8 +1,13 @@
 # Phrase Search
 
-I was experimenting with nGram tokenizers in Go and I ended up with a
-neat little text searcher that is optimized to find phrases in large
-bodies of text.
+A small text searcher that is optimized to work with bodies of text.
+It:
+
+* Takes a paragraph and breaks it up into sentences using punctuation.
+* Tokenizes each sentence with a lowercase and nGrams tokenizer.
+* Stores the tokens in a records map, which makes sure a single body of
+  text won't create duplicate records.
+* Stores the records map in the index.
 
 ## Example
 
