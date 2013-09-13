@@ -2,56 +2,56 @@ package main
 
 import (
 	"fmt"
+	"github.com/streadway/simpleuuid"
 	"log"
 	"strings"
 	"sync"
 	"time"
-  "github.com/streadway/simpleuuid"
 )
 
 type Token struct {
-  Document *Document
-	Score float32
+	Document *Document
+	Score    float32
 }
 
 type Document struct {
-  UUID simpleuuid.UUID
-  Data string
+	UUID simpleuuid.UUID
+	Data string
 }
 
 type Index struct {
 	Name   string
-  Tokens map[string][]*Token
+	Tokens map[string][]*Token
 	Debug  bool
 }
 
 type SearchResult struct {
-  TokenRef *Token
-  Document *Document
+	TokenRef *Token
+	Document *Document
 }
 
 func (sr *SearchResult) Score() float32 {
-  return sr.TokenRef.Score
+	return sr.TokenRef.Score
 }
 
 func NewDocument(data string) *Document {
-  uuid, _ := simpleuuid.NewTime(time.Now())
-  return &Document{uuid, data}
+	uuid, _ := simpleuuid.NewTime(time.Now())
+	return &Document{uuid, data}
 }
 
 func NewIndex(name string, debug bool) *Index {
 	if debug {
 		log.Printf("Creating index '%s'", name)
 	}
-  return &Index{name, make(map[string][]*Token), debug}
+	return &Index{name, make(map[string][]*Token), debug}
 }
 
 func (index *Index) Insert(text string, data string) int {
 	var wg sync.WaitGroup
 	var phrases []string
 
-  wcounter := 0
-  document := NewDocument(data)
+	wcounter := 0
+	document := NewDocument(data)
 	token_map := make(map[string]*Token)
 	phrases = strings.FieldsFunc(text, SentenceDelims)
 	time_start := time.Now()
@@ -121,6 +121,6 @@ func main() {
 	time_total := time.Now().Sub(time_start).Seconds()
 
 	if needle != nil {
-    fmt.Printf("\nFound %d document(s) in %fs: Document{uuid: %s, data: \"%s\", score: %1.2f}\n\n", len(needle), time_total, needle[0].Document.UUID, needle[0].Document.Data, needle[0].Score)
+		fmt.Printf("\nFound %d document(s) in %fs: Document{uuid: %s, data: \"%s\", score: %1.2f}\n\n", len(needle), time_total, needle[0].Document.UUID, needle[0].Document.Data, needle[0].Score)
 	}
 }
