@@ -65,16 +65,21 @@ func (index *Index) Add(entry string, data string) int {
 	for n := wc; n > 0; n-- {
 		go func(n int) {
 			i_max := wc - (n - 1)
-			for i := 0; i < i_max; i++ {
+      records := make(map[string]*Record)
+      for i := 0; i < i_max; i++ {
 				phrase := strings.Join(words[i:i+n], " ")
 				score := wc - n
 				rc++
 
-				index.Records[phrase] = append(index.Records[phrase], &Record{data, score})
+				records[phrase] = &Record{data, score}
 				if index.Debug {
 					log.Printf("%s <-- %s : %s (perm_score=%d)", index.Name, phrase, data, score)
 				}
 			}
+
+      for p, r := range records {
+        index.Records[p] = append(index.Records[p], r)
+      }
 
 			wg.Done()
 		}(n)
@@ -115,4 +120,20 @@ func main() {
 	if programming_language != nil {
 		fmt.Printf("\nwhat is an awesome programming language? %s (score: %d)\n\n", programming_language[0].Data, programming_language[0].Score)
 	}
+
+  fmt.Printf("\nTelling 'facts' a bunch of random stuff\n\n")
+  index.Add("this is a test with repeating words repeating words repeating words hopefully it performs well and it doesnt break lets hope so test test test test repeating words repeating words test repeating words", "works")
+
+  test := index.Find("repeating words")
+  if test != nil {
+    fmt.Printf("\nrepeating words ? %s (score: %d)\n\n", test[0].Data, test[0].Score)
+  }
+
+  fmt.Printf("\nTelling 'facts' a lot of stuff\n\n")
+  index.Add("ropy up tel pale khayal periphrases a hi mishap periosteorrhaphy hypostoma oh weepy satrapies proatheist uh trilletto a of usure applauses statutorily hulk at saltest asp was yarry ketyl urali rate a hays slitwork to psykters oleo pleomastia lap aortoptosia ye auxiliarly reiter woo oily yuk palmilla a riser haphtarah uprush of laws ply housemaster maltworm ahoy hosel tom thruway my mesolite tomosis lama rye profitless papaprelatist eke uh ketway throwwort furmety mia a multiflue serratiform rosser ha keratometry fopship postholes fly we sup olepy afforest olio host kisra seels oh prutah yip masterwort allorrhyhmia pall rillow hi polythely weaselwise sax pot fatal soporiferous uh up a oafs uppop misappropriates purity why of sap flex elfwife asset so err tits littermates hurt rams rule peal pyrophile tams them me ye upstares pow homoiousious oomph myropolist a toe pulleys ritely frothy khalifas ow petal toe islot tosser uh teras spy phi empresa a extremum this loftless a misstop port a smokeshaft hysteropathy yolk photomappe miss smithite you phyla limitless wholly lustres rex plea hetairas a a hopperette sparse assaut frass swum phloem twaes retypes um part retromammary ye proller oestriasis fart up sootlike impresari pip amyxorrhoea isotypes faitery a maksoorah paw rosy arty malaperts puss emissaries prexy solutes lithemia flatfoots pitau a us trap florae aft lasty surrealists so superearthly ow samel matripotestal slippier harp laius aim alulet skimos septole slaty to tea rokee a far realities sows pre of firmware yep prowfishes uptwist why frithwork imperf me upstep so aah stipitiform arm omit hark sirky ext awes hysteroptosia spermolysis spirket awoke am ha pram emplastrum shat needle hale sea sat a", "it works")
+  
+  needle := index.Find("needle")
+  if needle != nil {
+    fmt.Printf("\nfound needle in haystack? %s (score: %d)\n\n", needle[0].Data, needle[0].Score)
+  }
 }
