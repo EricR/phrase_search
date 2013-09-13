@@ -36,100 +36,83 @@ func NewIndex(name string, debug bool) *Index {
 
 // Generates nGram tokens and stores them in the index.
 //
-func (index *Index) Add(entry string, data string) int {
-	var rc int
-	var wc int
-	var wg sync.WaitGroup
-	var words []string
+func (index *Index) Add(text string, data string) int {
+  var wg sync.WaitGroup
+  var phrases []string
+  var wcounter int
 
-	// Split phrase into words
-	words = strings.Split(entry, " ")
-	wc = len(words)
+  // Init records
+  records := make(map[string]*Record)
 
-	// If word count is 0, we have nothing to do
-	if wc == 0 {
-		return rc
-	}
+  // Make text all lowercase
+  text = strings.ToLower(text)
 
-	// Since we're creating go routines for each iteration of nGram tokenization,
-	// we need a waitgroup to know when we're all done
-	wg.Add(wc)
+	// Split text into phrases
+  phrases = strings.Split(text, ".")
+  phrases = strings.Split(text, "!")
+  phrases = strings.Split(text, "?")
+  phrases = strings.Split(text, ",")
 
-	// Track amount of time nGrams tokenization takes
-	start := time.Now()
-	log.Printf("Started writing %d words to '%s'", wc, index.Name)
+  start := time.Now()
+  log.Printf("Started writing %d phrases to '%s'", len(phrases), index.Name)
 
-	// Generate nGram tokens for all cases of n and create associated records
-	for n := wc; n > 0; n-- {
-		go func(n int) {
-			i_max := wc - (n - 1)
-      records := make(map[string]*Record)
-      for i := 0; i < i_max; i++ {
-				phrase := strings.Join(words[i:i+n], " ")
-				score := wc - n
-				rc++
+  for _, phrase := range phrases {
+    words := strings.Split(phrase, " ")
+	  wc := len(words)
 
-				records[phrase] = &Record{data, score}
-				if index.Debug {
-					log.Printf("%s <-- %s : %s (perm_score=%d)", index.Name, phrase, data, score)
-				}
-			}
+    // If word count is 0, we have nothing to do
+    if wc == 0 {
+      break
+    }
 
-      for p, r := range records {
-        index.Records[p] = append(index.Records[p], r)
-      }
+    wg.Add(wc)
 
-			wg.Done()
-		}(n)
-	}
+    // Generate nGram tokens for all cases of n and create associated records
+    for n := wc; n > 0; n-- {
+      go func(n int) {
+        i_max := wc - (n - 1)
+        for i := 0; i < i_max; i++ {
+          phrase := strings.Join(words[i:i+n], " ")
+          score := wc - n
+          wcounter++
 
-	// Wait until we're finished
-	wg.Wait()
+          records[phrase] = &Record{data, score}
+          if index.Debug {
+            log.Printf("%s <-- %s : %s (perm_score=%d)", index.Name, phrase, data, score)
+          }
+        }
 
-	total := time.Now().Sub(start)
-	log.Printf("Write took %fs", total.Seconds())
+        wg.Done()
+      }(n)
+    }
 
-	return wc
+    wg.Wait()
+  }
+
+  total := time.Now().Sub(start)
+  log.Printf("Wrote %d words (%fs)", wcounter, total.Seconds())
+
+  for p, r := range records {
+    index.Records[p] = append(index.Records[p], r)
+  }
+
+	return len(records)
 }
 
 // Looks up the phrase in an index's records
 //
 func (index *Index) Find(phrase string) []*Record {
-	return index.Records[phrase]
+	return index.Records[strings.ToLower(phrase)]
 }
 
 func main() {
 	index := NewIndex("facts", false)
 
-	fmt.Printf("\nTelling 'facts' that 'my adorable pet dog' = 'Spot'\n\n")
-	index.Add("my adorable pet dog", "Spot")
-
-	good_boy := index.Find("pet dog")
-	if good_boy != nil {
-		fmt.Printf("\nwho is a pet dog? %s (score: %d)\n", good_boy[0].Data, good_boy[0].Score)
-	}
-
-	fmt.Printf("\nTelling 'facts' that 'an awesome programming language that i enjoy' = 'Go'\n\n")
-	index.Add("an awesome programming language that i enjoy", "Go")
-
-	programming_language := index.Find("an awesome programming language")
-	if programming_language != nil {
-		fmt.Printf("\nwhat is an awesome programming language? %s (score: %d)\n\n", programming_language[0].Data, programming_language[0].Score)
-	}
-
-  fmt.Printf("\nTelling 'facts' a bunch of random stuff\n\n")
-  index.Add("this is a test with repeating words repeating words repeating words hopefully it performs well and it doesnt break lets hope so test test test test repeating words repeating words test repeating words", "works")
-
-  test := index.Find("repeating words")
-  if test != nil {
-    fmt.Printf("\nrepeating words ? %s (score: %d)\n\n", test[0].Data, test[0].Score)
-  }
-
-  fmt.Printf("\nTelling 'facts' a lot of stuff\n\n")
-  index.Add("ropy up tel pale khayal periphrases a hi mishap periosteorrhaphy hypostoma oh weepy satrapies proatheist uh trilletto a of usure applauses statutorily hulk at saltest asp was yarry ketyl urali rate a hays slitwork to psykters oleo pleomastia lap aortoptosia ye auxiliarly reiter woo oily yuk palmilla a riser haphtarah uprush of laws ply housemaster maltworm ahoy hosel tom thruway my mesolite tomosis lama rye profitless papaprelatist eke uh ketway throwwort furmety mia a multiflue serratiform rosser ha keratometry fopship postholes fly we sup olepy afforest olio host kisra seels oh prutah yip masterwort allorrhyhmia pall rillow hi polythely weaselwise sax pot fatal soporiferous uh up a oafs uppop misappropriates purity why of sap flex elfwife asset so err tits littermates hurt rams rule peal pyrophile tams them me ye upstares pow homoiousious oomph myropolist a toe pulleys ritely frothy khalifas ow petal toe islot tosser uh teras spy phi empresa a extremum this loftless a misstop port a smokeshaft hysteropathy yolk photomappe miss smithite you phyla limitless wholly lustres rex plea hetairas a a hopperette sparse assaut frass swum phloem twaes retypes um part retromammary ye proller oestriasis fart up sootlike impresari pip amyxorrhoea isotypes faitery a maksoorah paw rosy arty malaperts puss emissaries prexy solutes lithemia flatfoots pitau a us trap florae aft lasty surrealists so superearthly ow samel matripotestal slippier harp laius aim alulet skimos septole slaty to tea rokee a far realities sows pre of firmware yep prowfishes uptwist why frithwork imperf me upstep so aah stipitiform arm omit hark sirky ext awes hysteroptosia spermolysis spirket awoke am ha pram emplastrum shat a needle in a hay stack hale sea sat a", "it works")
+  fmt.Printf("\nWriting lorem ipsum to 'facts'\n\n")
+  index.Add("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. A needle in a hay stack", "It works!")
   
-  needle := index.Find("a needle in a hay stack")
+  needle := index.Find("a needle in a Hay Stack")
   if needle != nil {
-    fmt.Printf("\nfound needle in haystack? %s (score: %d)\n\n", needle[0].Data, needle[0].Score)
+    fmt.Printf("\nFinding 'a needle in a Hay Stack' Found %d record(s). Returned data: %s (score: %d)\n\n", len(needle), needle[0].Data, needle[0].Score)
   }
 }
