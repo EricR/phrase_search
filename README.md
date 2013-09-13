@@ -48,3 +48,4 @@ Found 1 record(s) in 0.000001s: First Lorem Ipsum (score: 0.86)
 * Write tests
 * Write index methods for updating and deleting records
 * Turn this into a package
+* Write a JSON API?
