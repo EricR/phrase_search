@@ -9,8 +9,7 @@ import (
 )
 
 // A record has associated data and a score.
-// Scores are the number of permutations that were required for that record.
-// The lower the score, the bigger the nGram token was and the more unique the record is.
+// Scores are a percentage of phrase permutations over total sentence permutations
 //
 type Record struct {
 	Data  string
