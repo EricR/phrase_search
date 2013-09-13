@@ -37,58 +37,58 @@ func NewIndex(name string, debug bool) *Index {
 // Generates nGram tokens and stores them in the index.
 //
 func (index *Index) Add(text string, data string) int {
-  var wg sync.WaitGroup
-  var phrases []string
-  var wcounter int
+	var wg sync.WaitGroup
+	var phrases []string
+	var wcounter int
 
-  // Init records
-  records := make(map[string]*Record)
+	// Init records
+	records := make(map[string]*Record)
 
-  // Make text all lowercase
-  text = strings.ToLower(text)
+	// Make text all lowercase
+	text = strings.ToLower(text)
 
 	// Split text into phrases
-  phrases = strings.FieldsFunc(text, SentenceDelims)
+	phrases = strings.FieldsFunc(text, SentenceDelims)
 
-  start := time.Now()
+	start := time.Now()
 
-  for _, phrase := range phrases {
-    words := strings.Split(phrase, " ")
-	  wc := len(words)
+	for _, phrase := range phrases {
+		words := strings.Split(phrase, " ")
+		wc := len(words)
 
-    if wc == 0 {
-      break
-    }
+		if wc == 0 {
+			break
+		}
 
-    wg.Add(wc)
+		wg.Add(wc)
 
-    for n := wc; n > 0; n-- {
-      go func(n int) {
-        i_max := wc - (n - 1)
-        for i := 0; i < i_max; i++ {
-          phrase := strings.Join(words[i:i+n], " ")
-          score := float32(n) / float32(wc)
-          wcounter++
+		for n := wc; n > 0; n-- {
+			go func(n int) {
+				i_max := wc - (n - 1)
+				for i := 0; i < i_max; i++ {
+					phrase := strings.Join(words[i:i+n], " ")
+					score := float32(n) / float32(wc)
+					wcounter++
 
-          records[phrase] = &Record{data, score}
-          if index.Debug {
-            log.Printf("%s <-- %s : %s (perm_score=%d)", index.Name, phrase, data, score)
-          }
-        }
+					records[phrase] = &Record{data, score}
+					if index.Debug {
+						log.Printf("%s <-- %s : %s (perm_score=%d)", index.Name, phrase, data, score)
+					}
+				}
 
-        wg.Done()
-      }(n)
-    }
+				wg.Done()
+			}(n)
+		}
 
-    wg.Wait()
-  }
+		wg.Wait()
+	}
 
-  total := time.Now().Sub(start)
-  log.Printf("Wrote %d words to '%s' (took %fs)", wcounter, index.Name, total.Seconds())
+	total := time.Now().Sub(start)
+	log.Printf("Wrote %d words to '%s' (took %fs)", wcounter, index.Name, total.Seconds())
 
-  for p, r := range records {
-    index.Records[p] = append(index.Records[p], r)
-  }
+	for p, r := range records {
+		index.Records[p] = append(index.Records[p], r)
+	}
 
 	return len(records)
 }
@@ -102,18 +102,21 @@ func (index *Index) Find(phrase string) []*Record {
 // Sentnece delimiters
 //
 func SentenceDelims(r rune) bool {
-  return r == '.' || r == ',' || r == '?' || r == '!'
+	return r == '.' || r == ',' || r == '?' || r == '!'
 }
 
 func main() {
 	index := NewIndex("facts", false)
 
-  fmt.Printf("\nWriting lorem ipsum to 'facts'\n\n")
-  index.Add("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. A needle in a hay stack", "It works!")
-  
-  start := time.Now()
-  needle := index.Find("a needle in a Hay Stack")
-  if needle != nil {
-    fmt.Printf("\nFinding 'a needle in a Hay Stack' Found %d record(s) in %fs: %s (score: %1.2f)\n\n", len(needle), time.Now().Sub(start).Seconds(), needle[0].Data, needle[0].Score)
-  }
+	fmt.Printf("\nWriting lorem ipsums to 'facts'\n\n")
+	index.Add("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. A needle in a hay stack", "First")
+	index.Add("Sed lectus. Integer euismod lacus luctus magna. Quisque cursus, metus vitae pharetra auctor, sem massa mattis sem, at interdum magna augue eget diam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Morbi lacinia molestie dui. Praesent blandit dolor. Sed non quam. In vel mi sit amet augue congue elementum. Morbi in ipsum sit amet pede facilisis laoreet. Donec lacus nunc, viverra nec, blandit vel, egestas et, augue. Vestibulum tincidunt malesuada tellus. Ut ultrices ultrices enim.", "Second")
+	index.Add("Mauris ipsum. Nulla metus metus, ullamcorper vel, tincidunt sed, euismod in, nibh. Quisque volutpat condimentum velit. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nam nec ante. Sed lacinia, urna non tincidunt mattis, tortor neque adipiscing diam, a cursus ipsum ante quis turpis. Nulla facilisi. Ut fringilla. Suspendisse potenti. Nunc feugiat mi a tellus consequat imperdiet. Vestibulum sapien. Proin quam. Etiam ultrices. Suspendisse in justo eu magna luctus suscipit.", "Third")
+	index.Add("Curabitur sit amet mauris. Morbi in dui quis est pulvinar ullamcorper. Nulla facilisi. Integer lacinia sollicitudin massa. Cras metus. Sed aliquet risus a tortor. Integer id quam. Morbi mi. Quisque nisl felis, venenatis tristique, dignissim in, ultrices sit amet, augue. Proin sodales libero eget ante. Nulla quam. Aenean laoreet. Vestibulum nisi lectus, commodo ac, facilisis ac, ultricies eu, pede. Ut orci risus, accumsan porttitor, cursus quis, aliquet eget, justo. ", "Third")
+
+	start := time.Now()
+	needle := index.Find("a needle in a Hay Stack")
+	if needle != nil {
+		fmt.Printf("\nFinding 'a needle in a Hay Stack' Found %d record(s) in %fs: %s (score: %1.2f)\n\n", len(needle), time.Now().Sub(start).Seconds(), needle[0].Data, needle[0].Score)
+	}
 }
