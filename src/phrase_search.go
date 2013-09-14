@@ -15,28 +15,28 @@ type TokenCollectionMap map[string][]*Token
 type DocumentCollectionMap map[*simpleuuid.UUID]*Document
 
 type Token struct {
-  Phrase   string
+	Phrase   string
 	Document *Document
 	Score    float32
 }
 
 type Document struct {
-	UUID simpleuuid.UUID
-  Index *Index
-	Data string
-  Tokens TokenCollection
+	UUID   simpleuuid.UUID
+	Index  *Index
+	Data   string
+	Tokens TokenCollection
 }
 
 func (document *Document) Delete() {
-  document.Tokens = NewTokenCollection()
-  delete(document.Index.Documents, &document.UUID)
+	document.Tokens = NewTokenCollection()
+	delete(document.Index.Documents, &document.UUID)
 }
 
 type Index struct {
-	Name   string
-	Debug  bool
-  Tokens TokenCollectionMap
-  Documents DocumentCollectionMap
+	Name      string
+	Debug     bool
+	Tokens    TokenCollectionMap
+	Documents DocumentCollectionMap
 }
 
 func (index *Index) Insert(text string, data string) int {
@@ -44,9 +44,9 @@ func (index *Index) Insert(text string, data string) int {
 	var phrases []string
 
 	document := NewDocument(index, data)
-  token_map := make(TokenMap)
+	token_map := make(TokenMap)
 	phrases = strings.FieldsFunc(text, SentenceDelims)
-  wcounter := 0
+	wcounter := 0
 	time_start := time.Now()
 
 	for _, phrase := range phrases {
@@ -86,10 +86,10 @@ func (index *Index) Insert(text string, data string) int {
 
 	for p, t := range token_map {
 		index.Tokens[p] = append(index.Tokens[p], t)
-    document.Tokens = append(document.Tokens, t)
+		document.Tokens = append(document.Tokens, t)
 	}
 
-  index.Documents[&document.UUID] = document
+	index.Documents[&document.UUID] = document
 
 	return len(token_map)
 }
@@ -99,7 +99,7 @@ func (index *Index) Search(phrase string) []*Token {
 }
 
 type SearchResult struct {
-  Token
+	Token
 	*Document
 }
 
@@ -108,7 +108,7 @@ func (search_result *SearchResult) Score() float32 {
 }
 
 func NewTokenCollection() TokenCollection {
-  return make(TokenCollection, 100)
+	return make(TokenCollection, 100)
 }
 
 func NewDocument(index *Index, data string) *Document {
@@ -120,7 +120,7 @@ func NewIndex(name string, debug bool) *Index {
 	if debug {
 		log.Printf("Creating index '%s'", name)
 	}
-  return &Index{name, debug, make(TokenCollectionMap), make(DocumentCollectionMap)}
+	return &Index{name, debug, make(TokenCollectionMap), make(DocumentCollectionMap)}
 }
 
 func SentenceDelims(r rune) bool {
@@ -139,13 +139,13 @@ func main() {
 	fmt.Printf("\nSearching for 'a needle in a Hay Stack' in 'Lorem Ipsums' index")
 	time_start := time.Now()
 	results := index.Search("a needle in a Hay Stack")
-  needle := results[0]
+	needle := results[0]
 	time_total := time.Now().Sub(time_start).Seconds()
-  fmt.Printf("\nFound %d document(s) in %fs: Document{uuid: %s, data: \"%s\", score: %1.2f}\n", len(results), time_total, needle.Document.UUID, needle.Document.Data, needle.Score)
+	fmt.Printf("\nFound %d document(s) in %fs: Document{uuid: %s, data: \"%s\", score: %1.2f}\n", len(results), time_total, needle.Document.UUID, needle.Document.Data, needle.Score)
 
-  fmt.Printf("\nIndex now has %d documents and %d tokens", len(index.Documents), len(index.Tokens))
+	fmt.Printf("\nIndex now has %d documents and %d tokens", len(index.Documents), len(index.Tokens))
 
-  fmt.Printf("\n\nDeleting found record\n\n")
-  needle.Document.Delete()
-  fmt.Printf("Index now has %d documents and %d tokens\n\n", len(index.Documents), len(index.Tokens))
+	fmt.Printf("\n\nDeleting found record\n\n")
+	needle.Document.Delete()
+	fmt.Printf("Index now has %d documents and %d tokens\n\n", len(index.Documents), len(index.Tokens))
 }
