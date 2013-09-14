@@ -9,51 +9,44 @@ import (
 	"time"
 )
 
+type TokenCollection []*Token
+type TokenMap map[string]*Token
+type TokenCollectionMap map[string][]*Token
+type DocumentCollectionMap map[*simpleuuid.UUID]*Document
+
 type Token struct {
+  Phrase   string
 	Document *Document
 	Score    float32
 }
 
 type Document struct {
 	UUID simpleuuid.UUID
+  Index *Index
 	Data string
+  Tokens TokenCollection
+}
+
+func (document *Document) Delete() {
+  document.Tokens = NewTokenCollection()
+  delete(document.Index.Documents, &document.UUID)
 }
 
 type Index struct {
 	Name   string
-	Tokens map[string][]*Token
 	Debug  bool
-}
-
-type SearchResult struct {
-	TokenRef *Token
-	Document *Document
-}
-
-func (sr *SearchResult) Score() float32 {
-	return sr.TokenRef.Score
-}
-
-func NewDocument(data string) *Document {
-	uuid, _ := simpleuuid.NewTime(time.Now())
-	return &Document{uuid, data}
-}
-
-func NewIndex(name string, debug bool) *Index {
-	if debug {
-		log.Printf("Creating index '%s'", name)
-	}
-	return &Index{name, make(map[string][]*Token), debug}
+  Tokens TokenCollectionMap
+  Documents DocumentCollectionMap
 }
 
 func (index *Index) Insert(text string, data string) int {
 	var wg sync.WaitGroup
 	var phrases []string
 
-	wcounter := 0
-	document := NewDocument(data)
-	token_map := make(map[string]*Token)
+	document := NewDocument(index, data)
+  token_map := make(TokenMap)
 	phrases = strings.FieldsFunc(text, SentenceDelims)
+  wcounter := 0
 	time_start := time.Now()
 
 	for _, phrase := range phrases {
@@ -75,7 +68,7 @@ func (index *Index) Insert(text string, data string) int {
 					score := float32(n) / float32(wc)
 					wcounter++
 
-					token_map[phrase] = &Token{document, score}
+					token_map[phrase] = &Token{phrase, document, score}
 					if index.Debug {
 						log.Printf("%s <-- %s : %s (perm_score=%d)", index.Name, phrase, data, score)
 					}
@@ -91,15 +84,43 @@ func (index *Index) Insert(text string, data string) int {
 	time_total := time.Now().Sub(time_start)
 	log.Printf("Wrote %d words to '%s' (took %fs)", wcounter, index.Name, time_total.Seconds())
 
-	for p, r := range token_map {
-		index.Tokens[p] = append(index.Tokens[p], r)
+	for p, t := range token_map {
+		index.Tokens[p] = append(index.Tokens[p], t)
+    document.Tokens = append(document.Tokens, t)
 	}
+
+  index.Documents[&document.UUID] = document
 
 	return len(token_map)
 }
 
 func (index *Index) Search(phrase string) []*Token {
 	return index.Tokens[strings.ToLower(phrase)]
+}
+
+type SearchResult struct {
+  Token
+	*Document
+}
+
+func (search_result *SearchResult) Score() float32 {
+	return search_result.Token.Score
+}
+
+func NewTokenCollection() TokenCollection {
+  return make(TokenCollection, 100)
+}
+
+func NewDocument(index *Index, data string) *Document {
+	uuid, _ := simpleuuid.NewTime(time.Now())
+	return &Document{uuid, index, data, NewTokenCollection()}
+}
+
+func NewIndex(name string, debug bool) *Index {
+	if debug {
+		log.Printf("Creating index '%s'", name)
+	}
+  return &Index{name, debug, make(TokenCollectionMap), make(DocumentCollectionMap)}
 }
 
 func SentenceDelims(r rune) bool {
@@ -117,10 +138,14 @@ func main() {
 
 	fmt.Printf("\nSearching for 'a needle in a Hay Stack' in 'Lorem Ipsums' index")
 	time_start := time.Now()
-	needle := index.Search("a needle in a Hay Stack")
+	results := index.Search("a needle in a Hay Stack")
+  needle := results[0]
 	time_total := time.Now().Sub(time_start).Seconds()
+  fmt.Printf("\nFound %d document(s) in %fs: Document{uuid: %s, data: \"%s\", score: %1.2f}\n", len(results), time_total, needle.Document.UUID, needle.Document.Data, needle.Score)
 
-	if needle != nil {
-		fmt.Printf("\nFound %d document(s) in %fs: Document{uuid: %s, data: \"%s\", score: %1.2f}\n\n", len(needle), time_total, needle[0].Document.UUID, needle[0].Document.Data, needle[0].Score)
-	}
+  fmt.Printf("\nIndex now has %d documents and %d tokens", len(index.Documents), len(index.Tokens))
+
+  fmt.Printf("\n\nDeleting found record\n\n")
+  needle.Document.Delete()
+  fmt.Printf("Index now has %d documents and %d tokens\n\n", len(index.Documents), len(index.Tokens))
 }
