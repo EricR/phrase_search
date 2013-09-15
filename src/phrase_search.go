@@ -28,7 +28,22 @@ type Document struct {
 }
 
 func (document *Document) Delete() {
-	document.Tokens = NewTokenCollection()
+  for _, doc_token := range document.Tokens {
+    updated_collection := document.Index.Tokens[doc_token.Phrase]
+    for i, token := range updated_collection {
+      if token == doc_token {
+        updated_collection[i] = updated_collection[len(updated_collection)-1]
+        updated_collection = updated_collection[0:len(updated_collection)-1]
+      }
+    }
+
+    if len(updated_collection) == 0 {
+      delete(document.Index.Tokens, doc_token.Phrase)
+    } else {
+      document.Index.Tokens[doc_token.Phrase] = updated_collection
+    }
+  }
+
 	delete(document.Index.Documents, &document.UUID)
 }
 
@@ -108,7 +123,7 @@ func (search_result *SearchResult) Score() float32 {
 }
 
 func NewTokenCollection() TokenCollection {
-	return make(TokenCollection, 100)
+	return TokenCollection{}
 }
 
 func NewDocument(index *Index, data string) *Document {
@@ -145,7 +160,10 @@ func main() {
 
 	fmt.Printf("\nIndex now has %d documents and %d tokens", len(index.Documents), len(index.Tokens))
 
+  time_start = time.Now()
 	fmt.Printf("\n\nDeleting found record\n\n")
 	needle.Document.Delete()
+  time_total = time.Now().Sub(time_start).Seconds()
+  fmt.Printf("Delete took %fs\n", time_total)
 	fmt.Printf("Index now has %d documents and %d tokens\n\n", len(index.Documents), len(index.Tokens))
 }
