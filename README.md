@@ -16,8 +16,6 @@ It:
 On my iMac it runs pretty fast:
 
 ```
-
-i``
 Writing documents to 'lorem ipsums'
 
 2013/09/15 18:58:01 Wrote 483 words to 'Lorem Ipsums' (took 0.000361s)
@@ -36,6 +34,7 @@ Deleting found record
 
 Delete took 0.000043s
 Index now has 3 documents and 790 tokens
+```
 
 ## Todo
 * Write tests
