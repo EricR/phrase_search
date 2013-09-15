@@ -23,6 +23,7 @@ type Token struct {
 type Document struct {
 	UUID   simpleuuid.UUID
 	Index  *Index
+  Body   string
 	Data   string
 	Tokens TokenCollection
 }
@@ -54,13 +55,13 @@ type Index struct {
 	Documents DocumentCollectionMap
 }
 
-func (index *Index) Insert(text string, data string) int {
+func (index *Index) Insert(body string, data string) int {
 	var wg sync.WaitGroup
 	var phrases []string
 
-	document := NewDocument(index, data)
+	document := NewDocument(index, body, data)
 	token_map := make(TokenMap)
-	phrases = strings.FieldsFunc(text, SentenceDelims)
+	phrases = strings.FieldsFunc(body, SentenceDelims)
 	wcounter := 0
 	time_start := time.Now()
 
@@ -126,9 +127,9 @@ func NewTokenCollection() TokenCollection {
 	return TokenCollection{}
 }
 
-func NewDocument(index *Index, data string) *Document {
+func NewDocument(index *Index, body string, data string) *Document {
 	uuid, _ := simpleuuid.NewTime(time.Now())
-	return &Document{uuid, index, data, NewTokenCollection()}
+	return &Document{uuid, index, body, data, NewTokenCollection()}
 }
 
 func NewIndex(name string, debug bool) *Index {
@@ -156,7 +157,7 @@ func main() {
 	results := index.Search("a needle in a Hay Stack")
 	needle := results[0]
 	time_total := time.Now().Sub(time_start).Seconds()
-	fmt.Printf("\nFound %d document(s) in %fs: Document{uuid: %s, data: \"%s\", score: %1.2f}\n", len(results), time_total, needle.Document.UUID, needle.Document.Data, needle.Score)
+  fmt.Printf("\nFound %d document(s) in %fs: Document{uuid: %s, body: \"...\", data: \"%s\", score: %1.2f}\n", len(results), time_total, needle.Document.UUID, needle.Document.Data, needle.Score)
 
 	fmt.Printf("\nIndex now has %d documents and %d tokens", len(index.Documents), len(index.Tokens))
 
