@@ -23,27 +23,27 @@ type Token struct {
 type Document struct {
 	UUID   simpleuuid.UUID
 	Index  *Index
-  Body   string
+	Body   string
 	Data   string
 	Tokens TokenCollection
 }
 
 func (document *Document) Delete() {
-  for _, doc_token := range document.Tokens {
-    updated_collection := document.Index.Tokens[doc_token.Phrase]
-    for i, token := range updated_collection {
-      if token == doc_token {
-        updated_collection[i] = updated_collection[len(updated_collection)-1]
-        updated_collection = updated_collection[0:len(updated_collection)-1]
-      }
-    }
+	for _, doc_token := range document.Tokens {
+		updated_collection := document.Index.Tokens[doc_token.Phrase]
+		for i, token := range updated_collection {
+			if token == doc_token {
+				updated_collection[i] = updated_collection[len(updated_collection)-1]
+				updated_collection = updated_collection[0 : len(updated_collection)-1]
+			}
+		}
 
-    if len(updated_collection) == 0 {
-      delete(document.Index.Tokens, doc_token.Phrase)
-    } else {
-      document.Index.Tokens[doc_token.Phrase] = updated_collection
-    }
-  }
+		if len(updated_collection) == 0 {
+			delete(document.Index.Tokens, doc_token.Phrase)
+		} else {
+			document.Index.Tokens[doc_token.Phrase] = updated_collection
+		}
+	}
 
 	delete(document.Index.Documents, &document.UUID)
 }
@@ -157,14 +157,14 @@ func main() {
 	results := index.Search("a needle in a Hay Stack")
 	needle := results[0]
 	time_total := time.Now().Sub(time_start).Seconds()
-  fmt.Printf("\nFound %d document(s) in %fs: Document{uuid: %s, body: \"...\", data: \"%s\", score: %1.2f}\n", len(results), time_total, needle.Document.UUID, needle.Document.Data, needle.Score)
+	fmt.Printf("\nFound %d document(s) in %fs: Document{uuid: %s, body: \"...\", data: \"%s\", score: %1.2f}\n", len(results), time_total, needle.Document.UUID, needle.Document.Data, needle.Score)
 
 	fmt.Printf("\nIndex now has %d documents and %d tokens", len(index.Documents), len(index.Tokens))
 
-  time_start = time.Now()
+	time_start = time.Now()
 	fmt.Printf("\n\nDeleting found record\n\n")
 	needle.Document.Delete()
-  time_total = time.Now().Sub(time_start).Seconds()
-  fmt.Printf("Delete took %fs\n", time_total)
+	time_total = time.Now().Sub(time_start).Seconds()
+	fmt.Printf("Delete took %fs\n", time_total)
 	fmt.Printf("Index now has %d documents and %d tokens\n\n", len(index.Documents), len(index.Tokens))
 }
